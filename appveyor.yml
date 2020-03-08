@@ -40,41 +40,39 @@ test_script:
 #  - cd build && ctest --verbose --build-config "%CONFIGURATION%" && cd ..
 
 after_build:
-  - if "%BUILD_SHARED_LIBS%"=="True" (set BUILD_TYPE=Dynamic)
-    else (set BUILD_TYPE=Static)
-  - if "%CONFIGURATION%"=="Debug" (
-      set ZIPNAME=leveldb (%BUILD_TYPE% %platform% Debug^)
-      ;set PRETTYCONFIGNAME=Debug
-    ) else (
-      set ZIPNAME=leveldb (%BUILD_TYPE% %platform%^)
-      ;set PRETTYCONFIGNAME=Release
-    )
-  - if exist "build\%CONFIGURATION%\leveldb.dll" (
-      7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.dll"
-    )
-  - if exist "build\%CONFIGURATION%\leveldb.lib" (
-      7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.lib"
-    )
-  - if exist "build\%CONFIGURATION%\leveldb.exp" (
-      7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.exp"
-    )
-  - if exist "build\%CONFIGURATION%\leveldb.ilk" (
-      7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.ilk"
-    )
-  - if exist "build\%CONFIGURATION%\leveldb.pdb" (
-      7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.pdb"
-    )
-  #
-  - if "%BUILD_TYPE%"=="Dynamic" (
-      appveyor PushArtifact "build\%CONFIGURATION%\leveldbutil.exe" -FileName "leveldbutil-%platform%.exe"
-    )
+  - cmd: >-
+      if "%BUILD_SHARED_LIBS%"=="True" (
+        set BUILD_TYPE=Dynamic
+      ) else (
+        set BUILD_TYPE=Static
+      )
+      
+      if "%CONFIGURATION%"=="Debug" (
+        set ZIPNAME=leveldb (%BUILD_TYPE% %platform% Debug^)
+        set CONFIGURATION_PRETTY=Debug
+      ) else (
+        set ZIPNAME=leveldb (%BUILD_TYPE% %platform%^)
+        set CONFIGURATION_PRETTY=Release
+      )
+      
+      set OUTPUTFOLDER=%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%
+      
+      if exist "%OUTPUTFOLDER%\leveldb.dll" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.dll")
+      if exist "%OUTPUTFOLDER%\leveldb.lib" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.lib")
+      if exist "%OUTPUTFOLDER%\leveldb.exp" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.exp")
+      if exist "%OUTPUTFOLDER%\leveldb.ilk" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.ilk")
+      if exist "%OUTPUTFOLDER%\leveldb.pdb" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.pdb")
+      
+      if "%BUILD_TYPE%"=="Dynamic" (
+        appveyor PushArtifact "%OUTPUTFOLDER%\leveldbutil.exe" -FileName "leveldbutil-%platform%.exe"
+      )
 
 artifacts:
   - path: leveldb (*).zip
-    name: leveldb ($(BUILD_TYPE) $(PRETTYCONFIGNAME) $(platform))
+    name: leveldb ($(BUILD_TYPE) $(CONFIGURATION_PRETTY) $(platform))
 
-  - path: build/$(CONFIGURATION)
-    name: Complete Build Output ($(PRETTYCONFIGNAME) $(platform))
+  - path: build\$(CONFIGURATION)
+    name: Complete Build Output ($(CONFIGURATION_PRETTY) $(platform))
     type: zip
 
 deploy:
