@@ -39,33 +39,37 @@ test_script:
   - echo "Where we're going, we don't need tests."
 #  - cd build && ctest --verbose --build-config "%CONFIGURATION%" && cd ..
 
+environment:
+  AFTER_BUILD_COMMAND: |-
+    if "%BUILD_SHARED_LIBS%"=="True" (
+      set BUILD_TYPE=Dynamic
+    ) else (
+      set BUILD_TYPE=Static
+    )
+
+    if "%CONFIGURATION%"=="Debug" (
+      set ZIPNAME=leveldb (%BUILD_TYPE% %platform% Debug^^)
+      set CONFIGURATION_PRETTY=Debug
+    ) else (
+      set ZIPNAME=leveldb (%BUILD_TYPE% %platform%^^)
+      set CONFIGURATION_PRETTY=Release
+    )
+
+    set OUTPUTFOLDER=%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%
+
+    if exist "%OUTPUTFOLDER%\leveldb.dll" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.dll")
+    if exist "%OUTPUTFOLDER%\leveldb.lib" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.lib")
+    if exist "%OUTPUTFOLDER%\leveldb.exp" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.exp")
+    if exist "%OUTPUTFOLDER%\leveldb.ilk" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.ilk")
+    if exist "%OUTPUTFOLDER%\leveldb.pdb" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.pdb")
+
+    if "%BUILD_TYPE%"=="Dynamic" (
+      appveyor PushArtifact "%OUTPUTFOLDER%\leveldbutil.exe" -FileName "leveldbutil-%platform%.exe"
+    )
+
 after_build:
-  - cmd: |-
-      if "%BUILD_SHARED_LIBS%"=="True" (
-        set BUILD_TYPE=Dynamic
-      ) else (
-        set BUILD_TYPE=Static
-      )
-      
-      if "%CONFIGURATION%"=="Debug" (
-        set ZIPNAME=leveldb (%BUILD_TYPE% %platform% Debug^)
-        set CONFIGURATION_PRETTY=Debug
-      ) else (
-        set ZIPNAME=leveldb (%BUILD_TYPE% %platform%^)
-        set CONFIGURATION_PRETTY=Release
-      )
-      
-      set OUTPUTFOLDER=%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%
-      
-      if exist "%OUTPUTFOLDER%\leveldb.dll" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.dll")
-      if exist "%OUTPUTFOLDER%\leveldb.lib" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.lib")
-      if exist "%OUTPUTFOLDER%\leveldb.exp" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.exp")
-      if exist "%OUTPUTFOLDER%\leveldb.ilk" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.ilk")
-      if exist "%OUTPUTFOLDER%\leveldb.pdb" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.pdb")
-      
-      if "%BUILD_TYPE%"=="Dynamic" (
-        appveyor PushArtifact "%OUTPUTFOLDER%\leveldbutil.exe" -FileName "leveldbutil-%platform%.exe"
-      )
+  - cmd: echo %AFTER_BUILD_COMMAND% > temp_cmd.cmd
+  - cmd: temp_cmd
 
 artifacts:
   - path: leveldb (*).zip
