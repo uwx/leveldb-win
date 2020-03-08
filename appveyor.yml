@@ -44,18 +44,26 @@ after_build:
     else (set BUILD_TYPE=Static)
   - if "%CONFIGURATION%"=="Debug" (
       set ZIPNAME=leveldb (%BUILD_TYPE% %platform% Debug^)
-      set PRETTYCONFIGNAME=Debug
+      ;set PRETTYCONFIGNAME=Debug
     ) else (
       set ZIPNAME=leveldb (%BUILD_TYPE% %platform%^)
-      set PRETTYCONFIGNAME=Release
+      ;set PRETTYCONFIGNAME=Release
     )
   - if exist "build\%CONFIGURATION%\leveldb.dll" (
       7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.dll"
     )
-  - 7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.lib"
-  - 7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.exp"
-  - 7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.ilk"
-  - 7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.pdb"
+  - if exist "build\%CONFIGURATION%\leveldb.lib" (
+      7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.lib"
+    )
+  - if exist "build\%CONFIGURATION%\leveldb.exp" (
+      7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.exp"
+    )
+  - if exist "build\%CONFIGURATION%\leveldb.ilk" (
+      7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.ilk"
+    )
+  - if exist "build\%CONFIGURATION%\leveldb.pdb" (
+      7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.pdb"
+    )
   #
   - if "%BUILD_TYPE%"=="Dynamic" (
       appveyor PushArtifact "build\%CONFIGURATION%\leveldbutil.exe" -FileName "leveldbutil-%platform%.exe"
