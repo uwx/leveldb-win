@@ -40,7 +40,7 @@ test_script:
 #  - cd build && ctest --verbose --build-config "%CONFIGURATION%" && cd ..
 
 after_build:
-  - cmd: >-
+  - cmd: |-
       if "%BUILD_SHARED_LIBS%"=="True" (
         set BUILD_TYPE=Dynamic
       ) else (
