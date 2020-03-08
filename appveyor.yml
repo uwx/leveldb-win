@@ -42,8 +42,14 @@ test_script:
 after_build:
   - if "%BUILD_SHARED_LIBS%"=="True" (set BUILD_TYPE=Dynamic)
     else (set BUILD_TYPE=Static)
-  - if "%CONFIGURATION%"=="Debug" (set ZIPNAME=leveldb (%BUILD_TYPE% %platform% Debug^))
-    else (set ZIPNAME=leveldb (%BUILD_TYPE% %platform%^))
+  - if "%CONFIGURATION%"=="Debug" (
+      set ZIPNAME=leveldb (%BUILD_TYPE% %platform% Debug^)
+      set PRETTYCONFIGNAME=Debug
+    )
+    else (
+      set ZIPNAME=leveldb (%BUILD_TYPE% %platform%^)
+      set PRETTYCONFIGNAME=Release
+    )
   - if exist "build\%CONFIGURATION%\leveldb.dll" (
       7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.dll"
     )
@@ -57,11 +63,11 @@ after_build:
     )
 
 artifacts:
-  - path: leveldb ($(BUILD_TYPE) $(CONFIGURATION) $(platform)).zip
-    name: leveldb ($(BUILD_TYPE) $(CONFIGURATION) $(platform))
+  - path: leveldb (*).zip
+    name: leveldb ($(BUILD_TYPE) $(PRETTYCONFIGNAME) $(platform))
 
   - path: build/$(CONFIGURATION)
-    name: Complete Build Output ($(CONFIGURATION) $(platform))
+    name: Complete Build Output ($(PRETTYCONFIGNAME) $(platform))
     type: zip
 
 deploy:
@@ -71,6 +77,6 @@ deploy:
   repository: uwx/leveldb-win
   auth_token:
     secure: y/Ywxv2A8A0+0SVejRLtWZprYpvkt9zQzx44Ylgs4/V8UCsTx5fzW5IDmafc0lbw # your encrypted token from GitHub
-  artifact: /leveldb.*.zip/
+  artifact: /leveldb.*.zip/ # don't upload complete build output
   draft: false
   prerelease: false
