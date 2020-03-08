@@ -13,33 +13,6 @@ environment:
   matrix:
     - BUILD_SHARED_LIBS: 'True'
     - BUILD_SHARED_LIBS: 'False'
-
-platform:
-  - x86
-  - x64
-
-configuration:
-  - RelWithDebInfo
-  - Debug
-
-build_script:
-  - git submodule update --init --recursive
-  - mkdir build
-  - cd build
-  - if "%platform%"=="x86" (set CMAKE_GENERATOR_PLATFORM="Win32")
-      else (set CMAKE_GENERATOR_PLATFORM="%platform%")
-  - cmake --version
-  - cmake .. -G "%CMAKE_GENERATOR%" -A "%CMAKE_GENERATOR_PLATFORM%"
-      -DCMAKE_CONFIGURATION_TYPES="%CONFIGURATION%"
-      -DBUILD_SHARED_LIBS=%BUILD_SHARED_LIBS%
-  - cmake --build . --config "%CONFIGURATION%"
-  - cd ..
-
-test_script:
-  - echo "Where we're going, we don't need tests."
-#  - cd build && ctest --verbose --build-config "%CONFIGURATION%" && cd ..
-
-environment:
   AFTER_BUILD_COMMAND: |-
     if "%BUILD_SHARED_LIBS%"=="True" (
       set BUILD_TYPE=Dynamic
@@ -66,6 +39,31 @@ environment:
     if "%BUILD_TYPE%"=="Dynamic" (
       appveyor PushArtifact "%OUTPUTFOLDER%\leveldbutil.exe" -FileName "leveldbutil-%platform%.exe"
     )
+
+platform:
+  - x86
+  - x64
+
+configuration:
+  - RelWithDebInfo
+  - Debug
+
+build_script:
+  - git submodule update --init --recursive
+  - mkdir build
+  - cd build
+  - if "%platform%"=="x86" (set CMAKE_GENERATOR_PLATFORM="Win32")
+      else (set CMAKE_GENERATOR_PLATFORM="%platform%")
+  - cmake --version
+  - cmake .. -G "%CMAKE_GENERATOR%" -A "%CMAKE_GENERATOR_PLATFORM%"
+      -DCMAKE_CONFIGURATION_TYPES="%CONFIGURATION%"
+      -DBUILD_SHARED_LIBS=%BUILD_SHARED_LIBS%
+  - cmake --build . --config "%CONFIGURATION%"
+  - cd ..
+
+test_script:
+  - echo "Where we're going, we don't need tests."
+#  - cd build && ctest --verbose --build-config "%CONFIGURATION%" && cd ..
 
 after_build:
   - cmd: echo %AFTER_BUILD_COMMAND% > temp_cmd.cmd
