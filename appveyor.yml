@@ -1,0 +1,76 @@
+# Build matrix / environment variables are explained on:
+# https://www.appveyor.com/docs/appveyor-yml/
+# This file can be validated on: https://ci.appveyor.com/tools/validate-yaml
+
+version: "{build}"
+
+environment:
+  # AppVeyor currently has no custom job name feature.
+  # http://help.appveyor.com/discussions/questions/1623-can-i-provide-a-friendly-name-for-jobs
+  JOB: Visual Studio 2019
+  APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+  CMAKE_GENERATOR: Visual Studio 16 2019
+  matrix:
+    - BUILD_SHARED_LIBS: 'True'
+    - BUILD_SHARED_LIBS: 'False'
+
+platform:
+  - x86
+  - x64
+
+configuration:
+  - RelWithDebInfo
+  - Debug
+
+build_script:
+  - git submodule update --init --recursive
+  - mkdir build
+  - cd build
+  - if "%platform%"=="x86" (set CMAKE_GENERATOR_PLATFORM="Win32")
+      else (set CMAKE_GENERATOR_PLATFORM="%platform%")
+  - cmake --version
+  - cmake .. -G "%CMAKE_GENERATOR%" -A "%CMAKE_GENERATOR_PLATFORM%"
+      -DCMAKE_CONFIGURATION_TYPES="%CONFIGURATION%"
+      -DBUILD_SHARED_LIBS=%BUILD_SHARED_LIBS%
+  - cmake --build . --config "%CONFIGURATION%"
+  - cd ..
+
+test_script:
+  - echo "Where we're going, we don't need tests."
+#  - cd build && ctest --verbose --build-config "%CONFIGURATION%" && cd ..
+
+after_build:
+  - if "%BUILD_SHARED_LIBS%"=="True" (set BUILD_TYPE=Dynamic)
+    else (set BUILD_TYPE=Static)
+  - if "%CONFIGURATION%"=="Debug" (set ZIPNAME=leveldb (%BUILD_TYPE% %platform% Debug^))
+    else (set ZIPNAME=leveldb (%BUILD_TYPE% %platform%^))
+  - if exist "build\%CONFIGURATION%\leveldb.dll" (
+      7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.dll"
+    )
+  - 7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.lib"
+  - 7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.exp"
+  - 7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.ilk"
+  - 7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.pdb"
+  #
+  - if "%BUILD_TYPE%"=="Dynamic" (
+      appveyor PushArtifact "build\%CONFIGURATION%\leveldbutil.exe" -FileName "leveldbutil-%platform%.exe"
+    )
+
+artifacts:
+  - path: leveldb ($(BUILD_TYPE) $(CONFIGURATION) $(platform)).zip
+    name: leveldb ($(BUILD_TYPE) $(CONFIGURATION) $(platform))
+
+  - path: build/$(CONFIGURATION)
+    name: Complete Build Output ($(CONFIGURATION) $(platform))
+    type: zip
+
+deploy:
+  release: leveldb-r$(appveyor_build_version)
+  description: 'Automated build'
+  provider: GitHub
+  repository: uwx/leveldb-win
+  auth_token:
+    secure: y/Ywxv2A8A0+0SVejRLtWZprYpvkt9zQzx44Ylgs4/V8UCsTx5fzW5IDmafc0lbw # your encrypted token from GitHub
+  artifact: /leveldb.*.zip/
+  draft: false
+  prerelease: false
