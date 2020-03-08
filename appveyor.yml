@@ -43,12 +43,12 @@ after_build:
   - if "%BUILD_SHARED_LIBS%"=="True" (set BUILD_TYPE=Dynamic)
     else (set BUILD_TYPE=Static)
   - if "%CONFIGURATION%"=="Debug" (
-  -   set ZIPNAME=leveldb (%BUILD_TYPE% %platform% Debug^)
-  -   set PRETTYCONFIGNAME=Debug
-  - ) else (
-  -   set ZIPNAME=leveldb (%BUILD_TYPE% %platform%^)
-  -   set PRETTYCONFIGNAME=Release
-  - )
+      set ZIPNAME=leveldb (%BUILD_TYPE% %platform% Debug^)
+      set PRETTYCONFIGNAME=Debug
+    ) else (
+      set ZIPNAME=leveldb (%BUILD_TYPE% %platform%^)
+      set PRETTYCONFIGNAME=Release
+    )
   - if exist "build\%CONFIGURATION%\leveldb.dll" (
       7z a "%ZIPNAME%" "%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\leveldb.dll"
     )
