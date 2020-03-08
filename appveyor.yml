@@ -40,25 +40,25 @@ test_script:
 
 after_build:
   - ps: |-
-    if ($env:CONFIGURATION -eq "Debug") {
-      $env:ZIP_NAME = "leveldb ($BUILD_TYPE $env:platform Debug)"
-      $env:CONFIGURATION_PRETTY = "Debug"
-    } else {
-      $env:ZIP_NAME = "leveldb ($BUILD_TYPE $env:platform)"
-      $env:CONFIGURATION_PRETTY = "Release"
-    }
+      if ($env:CONFIGURATION -eq "Debug") {
+        $env:ZIP_NAME = "leveldb ($BUILD_TYPE $env:platform Debug)"
+        $env:CONFIGURATION_PRETTY = "Debug"
+      } else {
+        $env:ZIP_NAME = "leveldb ($BUILD_TYPE $env:platform)"
+        $env:CONFIGURATION_PRETTY = "Release"
+      }
 
-    $Output = "$env:APPVEYOR_BUILD_FOLDER\build\$env:CONFIGURATION"
+      $Output = "$env:APPVEYOR_BUILD_FOLDER\build\$env:CONFIGURATION"
 
-    if (Test-Path "$Output\leveldb.dll") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.dll" }
-    if (Test-Path "$Output\leveldb.lib") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.lib" }
-    if (Test-Path "$Output\leveldb.exp") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.exp" }
-    if (Test-Path "$Output\leveldb.ilk") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.ilk" }
-    if (Test-Path "$Output\leveldb.pdb") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.pdb" }
+      if (Test-Path "$Output\leveldb.dll") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.dll" }
+      if (Test-Path "$Output\leveldb.lib") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.lib" }
+      if (Test-Path "$Output\leveldb.exp") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.exp" }
+      if (Test-Path "$Output\leveldb.ilk") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.ilk" }
+      if (Test-Path "$Output\leveldb.pdb") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.pdb" }
 
-    if ($env:BUILD_SHARED_LIBS -eq "True") {
-      Push-AppveyorArtifact "$Output\leveldbutil.exe" -FileName "leveldbutil-$env:platform.exe"
-    }
+      if ($env:BUILD_SHARED_LIBS -eq "True") {
+        Push-AppveyorArtifact "$Output\leveldbutil.exe" -FileName "leveldbutil-$env:platform.exe"
+      }
 
 artifacts:
   - path: $(ZIPNAME).zip
