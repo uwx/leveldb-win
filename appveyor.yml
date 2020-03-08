@@ -13,33 +13,6 @@ environment:
   matrix:
     - BUILD_SHARED_LIBS: 'True'
     - BUILD_SHARED_LIBS: 'False'
-  AFTER_BUILD_COMMAND: |-
-    if "%BUILD_SHARED_LIBS%"=="True" (
-      set BUILD_TYPE=Dynamic
-    ) else (
-      set BUILD_TYPE=Static
-    )
-
-    if "%CONFIGURATION%"=="Debug" (
-      set ZIPNAME=leveldb (%BUILD_TYPE% %platform% Debug^^)
-      set CONFIGURATION_PRETTY=Debug
-    ) else (
-      set ZIPNAME=leveldb (%BUILD_TYPE% %platform%^^)
-      set CONFIGURATION_PRETTY=Release
-    )
-
-    set OUTPUTFOLDER=%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%
-
-    if exist "%OUTPUTFOLDER%\leveldb.dll" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.dll")
-    if exist "%OUTPUTFOLDER%\leveldb.lib" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.lib")
-    if exist "%OUTPUTFOLDER%\leveldb.exp" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.exp")
-    if exist "%OUTPUTFOLDER%\leveldb.ilk" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.ilk")
-    if exist "%OUTPUTFOLDER%\leveldb.pdb" (7z a "%ZIPNAME%" "%OUTPUTFOLDER%\leveldb.pdb")
-
-    if "%BUILD_TYPE%"=="Dynamic" (
-      appveyor PushArtifact "%OUTPUTFOLDER%\leveldbutil.exe" -FileName "leveldbutil-%platform%.exe"
-    )
-
 platform:
   - x86
   - x64
@@ -66,12 +39,30 @@ test_script:
 #  - cd build && ctest --verbose --build-config "%CONFIGURATION%" && cd ..
 
 after_build:
-  - cmd: echo %AFTER_BUILD_COMMAND% > temp_cmd.cmd
-  - cmd: temp_cmd
+  - ps: |-
+    if ($env:CONFIGURATION -eq "Debug") {
+      $env:ZIP_NAME = "leveldb ($BUILD_TYPE $env:platform Debug)"
+      $env:CONFIGURATION_PRETTY = "Debug"
+    } else {
+      $env:ZIP_NAME = "leveldb ($BUILD_TYPE $env:platform)"
+      $env:CONFIGURATION_PRETTY = "Release"
+    }
+
+    $Output = "$env:APPVEYOR_BUILD_FOLDER\build\$env:CONFIGURATION"
+
+    if (Test-Path "$Output\leveldb.dll") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.dll" }
+    if (Test-Path "$Output\leveldb.lib") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.lib" }
+    if (Test-Path "$Output\leveldb.exp") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.exp" }
+    if (Test-Path "$Output\leveldb.ilk") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.ilk" }
+    if (Test-Path "$Output\leveldb.pdb") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.pdb" }
+
+    if ($env:BUILD_SHARED_LIBS -eq "True") {
+      Push-AppveyorArtifact "$Output\leveldbutil.exe" -FileName "leveldbutil-$env:platform.exe"
+    }
 
 artifacts:
-  - path: leveldb (*).zip
-    name: leveldb ($(BUILD_TYPE) $(CONFIGURATION_PRETTY) $(platform))
+  - path: $(ZIPNAME).zip
+    name: $(ZIPNAME)
 
   - path: build\$(CONFIGURATION)
     name: Complete Build Output ($(CONFIGURATION_PRETTY) $(platform))
