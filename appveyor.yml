@@ -82,7 +82,7 @@ deploy:
   description: |-
     Built from branch $(APPVEYOR_REPO_BRANCH) at $(APPVEYOR_REPO_COMMIT_TIMESTAMP).
     `$(APPVEYOR_REPO_COMMIT)`: **$(APPVEYOR_REPO_COMMIT_MESSAGE)**
-    $(APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED)
+    *$(APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED)*
   provider: GitHub
   repository: uwx/leveldb-win
   auth_token:
