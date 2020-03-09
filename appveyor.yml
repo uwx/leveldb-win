@@ -67,8 +67,8 @@ after_build:
       }
 
 artifacts:
-  - path: $(ZIPNAME).zip
-    name: $(ZIPNAME)
+  - path: $(ZIP_NAME).zip
+    name: $(ZIP_NAME)
 
   - path: build\$(CONFIGURATION)
     name: Complete Build Output ($(CONFIGURATION_PRETTY) $(platform))
