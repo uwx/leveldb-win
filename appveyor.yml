@@ -66,6 +66,8 @@ after_build:
         Push-AppveyorArtifact "$Output\leveldbutil.exe" -FileName "leveldbutil-$env:platform.exe"
       }
 
+      $env:COMMIT_SHORT = $env:APPVEYOR_REPO_COMMIT.Substring(0, 8)
+
 artifacts:
   - path: $(ZIP_NAME).zip
     name: $(ZIP_NAME)
@@ -75,12 +77,25 @@ artifacts:
     type: zip
 
 deploy:
-  release: leveldb-r$(appveyor_build_version)
-  description: 'Automated build'
+  tag: 'r$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_COMMIT)'
+  release: '$(COMMIT_SHORT): $(APPVEYOR_REPO_COMMIT_MESSAGE)'
+  description: |-
+    Built from branch $(APPVEYOR_REPO_BRANCH) at $(APPVEYOR_REPO_COMMIT_TIMESTAMP).
+    `$(APPVEYOR_REPO_COMMIT)`: **$(APPVEYOR_REPO_COMMIT_MESSAGE)**
+    $(APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED)
   provider: GitHub
   repository: uwx/leveldb-win
   auth_token:
-    secure: y/Ywxv2A8A0+0SVejRLtWZprYpvkt9zQzx44Ylgs4/V8UCsTx5fzW5IDmafc0lbw # your encrypted token from GitHub
+    secure: qNMRA5boyCslJ9JgiqjpLdHd0NvhQVWcjJx3ZMrcgrDz6DNFJnDsV7w9IZuhqwYZ # your encrypted token from GitHub
   artifact: /leveldb.*.zip/ # don't upload complete build output
   draft: false
   prerelease: false
+  on:
+    branch: master # release from master branch only
+
+notifications:
+  - provider: Slack
+    on_build_success: true
+    on_build_failure: true
+    incoming_webhook:
+      secure: +5y63VhkKwOZVK264xwgH8gp7vI2cJivXvseQeSoYYNyH3wjOtid8Qz+gyNOjCGpI/xqxxJNwqFrL75ZPHYOYEKs9WhBWznTsFpJUAs5hxn1kcczMv6WYuwUzXJNEdqX6m47PnS7xrzUZJIRWNQCHRJCtN5VX+hXfVV6BT+tKQdRDeRr/LANhRLr2pAbIOGP
