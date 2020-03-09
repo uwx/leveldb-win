@@ -39,7 +39,13 @@ test_script:
 #  - cd build && ctest --verbose --build-config "%CONFIGURATION%" && cd ..
 
 after_build:
-  - ps: |-
+  - ps: |-	
+      if ($env:BUILD_SHARED_LIBS -eq "True") {	
+        $BUILD_TYPE = "Dynamic"
+      } else {
+        $BUILD_TYPE = "Static"
+      }
+
       if ($env:CONFIGURATION -eq "Debug") {
         $env:ZIP_NAME = "leveldb ($BUILD_TYPE $env:platform Debug)"
         $env:CONFIGURATION_PRETTY = "Debug"
@@ -56,7 +62,7 @@ after_build:
       if (Test-Path "$Output\leveldb.ilk") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.ilk" }
       if (Test-Path "$Output\leveldb.pdb") { 7z a "$env:ZIP_NAME.zip" "$Output\leveldb.pdb" }
 
-      if ($env:BUILD_SHARED_LIBS -eq "True") {
+      if ($BUILD_TYPE -eq "Dynamic" -and $env:CONFIGURATION_PRETTY -eq "Release") {
         Push-AppveyorArtifact "$Output\leveldbutil.exe" -FileName "leveldbutil-$env:platform.exe"
       }
 
